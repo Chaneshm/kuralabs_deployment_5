@@ -2,7 +2,6 @@ provider "aws" {
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
   region     = "us-east-1"
-
 }
 
 # Cluster
@@ -22,15 +21,14 @@ resource "aws_cloudwatch_log_group" "log-group" {
 }
 
 # Task Definition
-
 resource "aws_ecs_task_definition" "aws-ecs-task" {
   family = "url-task"
 
   container_definitions = <<EOF
   [
-  {
-      "name": "url-container",
-      "image": "tsanderson77/classact:latest",
+    {
+      "name": "nginx-container",
+      "image": "REPLACE WITH YOUR IMAGE",
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
@@ -44,6 +42,23 @@ resource "aws_ecs_task_definition" "aws-ecs-task" {
           "containerPort": 5000
         }
       ]
+    },
+    {
+      "name": "flask-container",
+      "image": "REPLACE WITH YOUR IMAGE",
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/url-logs",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "portMappings": [
+        {
+          "containerPort": 8000
+        }
+      ]
     }
   ]
   EOF
@@ -52,9 +67,8 @@ resource "aws_ecs_task_definition" "aws-ecs-task" {
   network_mode             = "awsvpc"
   memory                   = "1024"
   cpu                      = "512"
-  execution_role_arn       = "arn:aws:iam::266686430719:role/ecsTaskExecutionRole"
-  task_role_arn            = "arn:aws:iam::266686430719:role/ecsTaskExecutionRole"
-
+  execution_role_arn       = "REPLACE WITH YOUR ARN"
+  task_role_arn            = "REPLACE WITH YOUR ARN"
 }
 
 # ECS Service
@@ -78,9 +92,8 @@ resource "aws_ecs_service" "aws-ecs-service" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.url-app.arn
-    container_name   = "url-container"
+    container_name   = "nginx-container"
     container_port   = 5000
   }
-
 }
 
